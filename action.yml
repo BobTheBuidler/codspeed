@@ -1,0 +1,101 @@
+name: "Run CodSpeed Benchmarks"
+description: "Builds and/or installs the package wheel, then runs CodSpeed benchmarks using pytest with a constant test pattern for the faster-ethereum Python suite (faster-eth-abi, faster-eth-utils, faster-hexbytes, faster-web3.py). Not a general-purpose action."
+author: "Cline"
+inputs:
+  python-version:
+    description: "Python version to use for the CodSpeed run."
+    required: true
+  hash-key:
+    description: "Hash key for mypycify caching (files/globs)."
+    required: false
+  pip-cache-dependency-path:
+    description: "Dependency files for pip cache."
+    required: false
+  wheel-artifact-name:
+    description: "Optional: Name of the pre-built wheel artifact to download (if provided, skips build step)."
+    required: false
+  install-wheel-command:
+    description: "Optional: Custom shell command to install the built wheel. If not provided, defaults to 'pip install --no-binary :all: $(find . -name '*.whl')'."
+    required: false
+  install-codspeed-deps:
+    description: "Shell command to install CodSpeed dependencies (e.g. 'pip install -r requirements-codspeed.txt')."
+    required: true
+  ccache:
+    description: "Enable ccache for mypycify (default: false)."
+    required: false
+    default: "false"
+  shards:
+    description: "Number of CodSpeed shards (for parallelization). Default: 1"
+    required: false
+    default: "1"
+  mode:
+    description: "CodSpeed run mode (e.g. 'instrumentation', 'walltime'). Default: instrumentation"
+    required: false
+    default: "instrumentation"
+runs:
+  using: "composite"
+  steps:
+    - name: Validate Inputs
+      shell: bash
+      run: |
+        set -e
+        if [[ -z "${{ inputs.wheel-artifact-name }}" && -z "${{ inputs.hash-key }}" ]]; then
+          echo "ERROR: You must provide either 'wheel-artifact-name' (to download a pre-built wheel) or 'hash-key' (to build the wheel with mypycify)."
+          exit 1
+        fi
+        if [[ -n "${{ inputs.wheel-artifact-name }}" && -n "${{ inputs.hash-key }}" ]]; then
+          echo "ERROR: You must provide only one of 'wheel-artifact-name' or 'hash-key', not both."
+          exit 1
+        fi
+        if [[ -z "${{ inputs.install-codspeed-deps }}" ]]; then
+          echo "ERROR: 'install-codspeed-deps' is required."
+          exit 1
+        fi
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Download wheel artifact
+      if: ${{ inputs.wheel-artifact-name != '' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.wheel-artifact-name }}
+        path: .
+
+    - name: Build wheel with mypycify
+      if: ${{ inputs.wheel-artifact-name == '' }}
+      uses: BobTheBuidler/mypycify@master
+      with:
+        python-version: ${{ inputs.python-version }}
+        hash-key: ${{ inputs.hash-key }}
+        pip-cache-dependency-path: ${{ inputs.pip-cache-dependency-path }}
+        ccache: ${{ inputs.ccache }}
+
+    - name: Install built wheel
+      if: ${{ inputs.install-wheel-command != '' }}
+      run: eval "${{ inputs.install-wheel-command }}"
+    - name: Install built wheel (default)
+      if: ${{ inputs.install-wheel-command == '' }}
+      run: pip install --no-binary :all: $(find . -name '*.whl')
+
+    - name: Install CodSpeed dependencies
+      run: eval "${{ inputs.install-codspeed-deps }}"
+
+    - name: Remove source package(s) from local dir to force use of installed C extensions
+      run: rm -rf faster*
+
+    - name: Run CodSpeed Benchmarks
+      if: ${{ inputs.shards == '1' }}
+      uses: CodSpeedHQ/action@v4
+      with:
+        mode: ${{ inputs.mode }}
+        run: pytest --codspeed -k "test_faster_" benchmarks/
+
+    - name: Run CodSpeed Benchmarks (Sharded)
+      if: ${{ inputs.shards != '1' }}
+      uses: CodSpeedHQ/action@v4
+      with:
+        mode: ${{ inputs.mode }}
+        run: pytest --codspeed -k "test_faster_" --test-group=${{ matrix.shard }} --test-group-count=${{ inputs.shards }} benchmarks/
