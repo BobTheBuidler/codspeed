@@ -4,6 +4,13 @@
 
 This composite GitHub Action builds and/or installs a Python wheel, then runs CodSpeed benchmarks using pytest with a constant test pattern. It is designed specifically for the faster-ethereum Python suite (faster-eth-abi, faster-eth-utils, faster-hexbytes, faster-web3.py) and is **not a general-purpose CodSpeed action**.
 
+## Faster-Ethereum Python Suite Repositories
+
+- [faster-eth-abi](https://github.com/BobTheBuidler/faster-eth-abi)
+- [faster-eth-utils](https://github.com/BobTheBuidler/faster-eth-utils)
+- [faster-hexbytes](https://github.com/BobTheBuidler/faster-hexbytes)
+- [faster-web3.py](https://github.com/BobTheBuidler/faster-web3.py)
+
 ## Features
 
 - Supports both building the wheel internally or using a pre-built wheel artifact.

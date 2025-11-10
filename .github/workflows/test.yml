@@ -64,6 +64,8 @@ jobs:
           install-wheel-command: "pip install --no-binary :all: $(find testpkg/dist -name '*.whl')"
           install-codspeed-deps: "echo 'Simulate codspeed deps install'"
           shards: "3"
+          test-group: "${{ matrix.shard }}"
+          test-group-count: "3"
 
   invalid-inputs:
     name: Invalid Input Combinations (Should Fail)
@@ -90,4 +92,50 @@ jobs:
         with:
           python-version: "3.11"
           hash-key: "testpkg/setup.py"
+        continue-on-error: true
+      - name: Shards != 1, missing test-group (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "testpkg/setup.py"
+          shards: "3"
+          test-group-count: "3"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Shards != 1, missing test-group-count (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "testpkg/setup.py"
+          shards: "3"
+          test-group: "1"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Shards != 1, test-group-count does not match shards (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "testpkg/setup.py"
+          shards: "3"
+          test-group: "1"
+          test-group-count: "2"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Shards == 1, test-group set (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "testpkg/setup.py"
+          shards: "1"
+          test-group: "1"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Shards == 1, test-group-count set (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "testpkg/setup.py"
+          shards: "1"
+          test-group-count: "1"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
         continue-on-error: true
