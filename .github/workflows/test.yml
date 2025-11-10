@@ -16,8 +16,8 @@ jobs:
         uses: ./
         with:
           python-version: "3.11"
-          hash-key: "testpkg/setup.py"
-          pip-cache-dependency-path: "testpkg/setup.py"
+          hash-key: "setup.py"
+          pip-cache-dependency-path: "setup.py"
           install-wheel-command: "pip install --no-binary :all: $(find testpkg/dist -name '*.whl')"
           install-codspeed-deps: "echo 'Simulate codspeed deps install'"
           shards: "1"
@@ -59,8 +59,8 @@ jobs:
         uses: ./
         with:
           python-version: "3.11"
-          hash-key: "testpkg/setup.py"
-          pip-cache-dependency-path: "testpkg/setup.py"
+          hash-key: "setup.py"
+          pip-cache-dependency-path: "setup.py"
           install-wheel-command: "pip install --no-binary :all: $(find testpkg/dist -name '*.whl')"
           install-codspeed-deps: "echo 'Simulate codspeed deps install'"
           shards: "3"
@@ -77,7 +77,7 @@ jobs:
         uses: ./
         with:
           python-version: "3.11"
-          hash-key: "testpkg/setup.py"
+          hash-key: "setup.py"
           wheel-artifact-name: "testpkg-wheel"
           install-codspeed-deps: "echo 'Simulate codspeed deps install'"
         continue-on-error: true
@@ -91,13 +91,13 @@ jobs:
         uses: ./
         with:
           python-version: "3.11"
-          hash-key: "testpkg/setup.py"
+          hash-key: "setup.py"
         continue-on-error: true
       - name: Shards != 1, missing test-group (should fail)
         uses: ./
         with:
           python-version: "3.11"
-          hash-key: "testpkg/setup.py"
+          hash-key: "setup.py"
           shards: "3"
           test-group-count: "3"
           install-codspeed-deps: "echo 'Simulate codspeed deps install'"
@@ -106,7 +106,7 @@ jobs:
         uses: ./
         with:
           python-version: "3.11"
-          hash-key: "testpkg/setup.py"
+          hash-key: "setup.py"
           shards: "3"
           test-group: "1"
           install-codspeed-deps: "echo 'Simulate codspeed deps install'"
@@ -115,7 +115,7 @@ jobs:
         uses: ./
         with:
           python-version: "3.11"
-          hash-key: "testpkg/setup.py"
+          hash-key: "setup.py"
           shards: "3"
           test-group: "1"
           test-group-count: "2"
@@ -125,7 +125,7 @@ jobs:
         uses: ./
         with:
           python-version: "3.11"
-          hash-key: "testpkg/setup.py"
+          hash-key: "setup.py"
           shards: "1"
           test-group: "1"
           install-codspeed-deps: "echo 'Simulate codspeed deps install'"
@@ -134,7 +134,7 @@ jobs:
         uses: ./
         with:
           python-version: "3.11"
-          hash-key: "testpkg/setup.py"
+          hash-key: "setup.py"
           shards: "1"
           test-group-count: "1"
           install-codspeed-deps: "echo 'Simulate codspeed deps install'"

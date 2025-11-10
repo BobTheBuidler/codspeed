@@ -40,8 +40,8 @@ This composite GitHub Action builds and/or installs a Python wheel, then runs Co
 - uses: BobTheBuidler/codspeed@master
   with:
     python-version: "3.11"
-    hash-key: "testpkg/setup.py"
-    pip-cache-dependency-path: "testpkg/setup.py"
+    hash-key: "setup.py"
+    pip-cache-dependency-path: "setup.py"
     install-wheel-command: "pip install --no-binary :all: $(find testpkg/dist -name '*.whl')"
     install-codspeed-deps: "pip install pytest-codspeed"
     shards: "1"
@@ -77,8 +77,8 @@ This composite GitHub Action builds and/or installs a Python wheel, then runs Co
 - uses: BobTheBuidler/codspeed@master
   with:
     python-version: "3.11"
-    hash-key: "testpkg/setup.py"
-    pip-cache-dependency-path: "testpkg/setup.py"
+    hash-key: "setup.py"
+    pip-cache-dependency-path: "setup.py"
     install-wheel-command: "pip install --no-binary :all: $(find testpkg/dist -name '*.whl')"
     install-codspeed-deps: "pip install pytest-codspeed"
     shards: "3"
