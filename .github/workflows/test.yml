@@ -29,20 +29,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build wheel from testpkg
         run: |
-          cd testpkg
           python3 -m pip install --upgrade pip setuptools wheel
           python3 setup.py bdist_wheel
           cd ..
       - name: Upload Wheel Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: testpkg-wheel
+          name: testpkg-wheel-artifact-benchmark
           path: dist/*.whl
       - name: Run CodSpeed Composite Action (artifact mode)
         uses: ./
         with:
           python-version: "3.11"
-          wheel-artifact-name: "testpkg-wheel"
+          wheel-artifact-name: "testpkg-wheel-artifact-benchmark"
           install-wheel-command: "pip install --no-binary :all: $(find . -name '*.whl')"
           install-codspeed-deps: "echo 'Simulate codspeed deps install'"
           shards: "1"
