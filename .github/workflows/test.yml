@@ -1,0 +1,140 @@
+name: Composite Action Test Suite
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build-and-benchmark:
+    name: Build Wheel Internally and Run CodSpeed (No Artifact)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run CodSpeed Composite Action (build mode)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "setup.py"
+          pip-cache-dependency-path: "setup.py"
+          install-wheel-command: "pip install --no-binary :all: $(find dist -name '*.whl')"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+          shards: "1"
+
+  artifact-benchmark:
+    name: Use Prebuilt Wheel Artifact and Run CodSpeed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build wheel from testpkg
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 setup.py bdist_wheel
+          cd ..
+      - name: Upload Wheel Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: testpkg-wheel-artifact-benchmark
+          path: dist/*.whl
+      - name: Run CodSpeed Composite Action (artifact mode)
+        uses: ./
+        with:
+          python-version: "3.11"
+          wheel-artifact-name: "testpkg-wheel-artifact-benchmark"
+          install-wheel-command: "pip install --no-binary :all: $(find . -name '*.whl')"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+          shards: "1"
+
+  sharded-benchmark:
+    name: Sharded CodSpeed Run (Build Mode)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run CodSpeed Composite Action (sharded)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "setup.py"
+          pip-cache-dependency-path: "setup.py"
+          install-wheel-command: "pip install --no-binary :all: $(find dist -name '*.whl')"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+          shards: "3"
+          test-group: "${{ matrix.shard }}"
+          test-group-count: "3"
+
+  invalid-inputs:
+    name: Invalid Input Combinations (Should Fail)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Both wheel-artifact-name and hash-key (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "setup.py"
+          wheel-artifact-name: "testpkg-wheel"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Neither wheel-artifact-name nor hash-key (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Missing install-codspeed-deps (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "setup.py"
+        continue-on-error: true
+      - name: Shards != 1, missing test-group (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "setup.py"
+          shards: "3"
+          test-group-count: "3"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Shards != 1, missing test-group-count (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "setup.py"
+          shards: "3"
+          test-group: "1"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Shards != 1, test-group-count does not match shards (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "setup.py"
+          shards: "3"
+          test-group: "1"
+          test-group-count: "2"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Shards == 1, test-group set (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "setup.py"
+          shards: "1"
+          test-group: "1"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
+      - name: Shards == 1, test-group-count set (should fail)
+        uses: ./
+        with:
+          python-version: "3.11"
+          hash-key: "setup.py"
+          shards: "1"
+          test-group-count: "1"
+          install-codspeed-deps: "echo 'Simulate codspeed deps install'"
+        continue-on-error: true
