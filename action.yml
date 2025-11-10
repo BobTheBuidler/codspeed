@@ -97,15 +97,19 @@ runs:
     - name: Install built wheel
       if: ${{ inputs.install-wheel-command != '' }}
       run: eval "${{ inputs.install-wheel-command }}"
+      shell: bash
     - name: Install built wheel (default)
       if: ${{ inputs.install-wheel-command == '' }}
-      run: pip install --no-binary :all: $(find . -name '*.whl')
+      run: "pip install --no-binary :all: $(find . -name '*.whl')"
+      shell: bash
 
     - name: Install CodSpeed dependencies
       run: eval "${{ inputs.install-codspeed-deps }}"
+      shell: bash
 
     - name: Remove source package(s) from local dir to force use of installed C extensions
       run: rm -rf faster*
+      shell: bash
 
     - name: Run CodSpeed Benchmarks
       if: ${{ inputs.shards == '1' }}
