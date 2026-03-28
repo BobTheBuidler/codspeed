@@ -4,6 +4,13 @@
 
 This composite GitHub Action builds and/or installs a Python wheel, then runs CodSpeed benchmarks using pytest with a constant test pattern. It is designed specifically for the faster-ethereum Python suite (faster-eth-abi, faster-eth-utils, faster-hexbytes, faster-web3.py) and is **not a general-purpose CodSpeed action**.
 
+## Faster-Ethereum Python Suite Repositories
+
+- [faster-eth-abi](https://github.com/BobTheBuidler/faster-eth-abi)
+- [faster-eth-utils](https://github.com/BobTheBuidler/faster-eth-utils)
+- [faster-hexbytes](https://github.com/BobTheBuidler/faster-hexbytes)
+- [faster-web3.py](https://github.com/BobTheBuidler/faster-web3.py)
+
 ## Features
 
 - Supports both building the wheel internally or using a pre-built wheel artifact.
@@ -33,9 +40,9 @@ This composite GitHub Action builds and/or installs a Python wheel, then runs Co
 - uses: BobTheBuidler/codspeed@master
   with:
     python-version: "3.11"
-    hash-key: "testpkg/setup.py"
-    pip-cache-dependency-path: "testpkg/setup.py"
-    install-wheel-command: "pip install --no-binary :all: $(find testpkg/dist -name '*.whl')"
+    hash-key: "setup.py"
+    pip-cache-dependency-path: "setup.py"
+    install-wheel-command: "pip install --no-binary :all: $(find dist -name '*.whl')"
     install-codspeed-deps: "pip install pytest-codspeed"
     shards: "1"
 ```
@@ -45,7 +52,6 @@ This composite GitHub Action builds and/or installs a Python wheel, then runs Co
 ```yaml
 - name: Build wheel
   run: |
-    cd testpkg
     python3 -m pip install --upgrade pip setuptools wheel
     python3 setup.py bdist_wheel
     cd ..
@@ -53,7 +59,7 @@ This composite GitHub Action builds and/or installs a Python wheel, then runs Co
   uses: actions/upload-artifact@v4
   with:
     name: testpkg-wheel
-    path: testpkg/dist/*.whl
+    path: dist/*.whl
 
 - uses: BobTheBuidler/codspeed@master
   with:
@@ -70,9 +76,9 @@ This composite GitHub Action builds and/or installs a Python wheel, then runs Co
 - uses: BobTheBuidler/codspeed@master
   with:
     python-version: "3.11"
-    hash-key: "testpkg/setup.py"
-    pip-cache-dependency-path: "testpkg/setup.py"
-    install-wheel-command: "pip install --no-binary :all: $(find testpkg/dist -name '*.whl')"
+    hash-key: "setup.py"
+    pip-cache-dependency-path: "setup.py"
+    install-wheel-command: "pip install --no-binary :all: $(find dist -name '*.whl')"
     install-codspeed-deps: "pip install pytest-codspeed"
     shards: "3"
 ```

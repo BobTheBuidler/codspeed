@@ -28,6 +28,12 @@ inputs:
     description: "Number of CodSpeed shards (for parallelization). Default: 1"
     required: false
     default: "1"
+  test-group:
+    description: "CodSpeed test group index (for sharded runs, e.g. from matrix.shard)."
+    required: false
+  test-group-count:
+    description: "CodSpeed test group count (for sharded runs, e.g. from matrix total)."
+    required: false
   mode:
     description: "CodSpeed run mode (e.g. 'instrumentation', 'walltime'). Default: instrumentation"
     required: false
@@ -50,6 +56,21 @@ runs:
         if [[ -z "${{ inputs.install-codspeed-deps }}" ]]; then
           echo "ERROR: 'install-codspeed-deps' is required."
           exit 1
+        fi
+        if [[ "${{ inputs.shards }}" == "1" ]]; then
+          if [[ -n "${{ inputs.test-group }}" || -n "${{ inputs.test-group-count }}" ]]; then
+            echo "ERROR: 'test-group' and 'test-group-count' must not be set when 'shards' is 1."
+            exit 1
+          fi
+        else
+          if [[ -z "${{ inputs.test-group }}" || -z "${{ inputs.test-group-count }}" ]]; then
+            echo "ERROR: Both 'test-group' and 'test-group-count' must be set when 'shards' is not 1."
+            exit 1
+          fi
+          if [[ "${{ inputs.test-group-count }}" != "${{ inputs.shards }}" ]]; then
+            echo "ERROR: 'test-group-count' must match 'shards'."
+            exit 1
+          fi
         fi
 
     - name: Set up Python
@@ -76,15 +97,19 @@ runs:
     - name: Install built wheel
       if: ${{ inputs.install-wheel-command != '' }}
       run: eval "${{ inputs.install-wheel-command }}"
+      shell: bash
     - name: Install built wheel (default)
       if: ${{ inputs.install-wheel-command == '' }}
-      run: pip install --no-binary :all: $(find . -name '*.whl')
+      run: "pip install --no-binary :all: $(find . -name '*.whl')"
+      shell: bash
 
     - name: Install CodSpeed dependencies
       run: eval "${{ inputs.install-codspeed-deps }}"
+      shell: bash
 
     - name: Remove source package(s) from local dir to force use of installed C extensions
       run: rm -rf faster*
+      shell: bash
 
     - name: Run CodSpeed Benchmarks
       if: ${{ inputs.shards == '1' }}
@@ -94,8 +119,8 @@ runs:
         run: pytest --codspeed -k "test_faster_" benchmarks/
 
     - name: Run CodSpeed Benchmarks (Sharded)
-      if: ${{ inputs.shards != '1' }}
+      if: ${{ inputs.shards != '1' && inputs.test-group != '' && inputs.test-group-count != '' }}
       uses: CodSpeedHQ/action@v4
       with:
         mode: ${{ inputs.mode }}
-        run: pytest --codspeed -k "test_faster_" --test-group=${{ matrix.shard }} --test-group-count=${{ inputs.shards }} benchmarks/
+        run: pytest --codspeed -k "test_faster_" --test-group=${{ inputs.test-group }} --test-group-count=${{ inputs.test-group-count }} benchmarks/
